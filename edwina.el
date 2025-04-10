@@ -122,11 +122,12 @@ a buffer and other information."
 (defun edwina-arrange (&optional panes)
   "Arrange PANES according to Edwina's current layout."
   (interactive)
-  (let* ((panes (or panes (edwina-pane-list))))
-    (select-window
-     (edwina--respective-window (selected-window)
-       (delete-other-windows)
-       (funcall edwina-layout panes)))))
+  ;; HACK from https://github.com/axgfn/edwina/pull/16
+  (let* ((panes (or panes (edwina-pane-list)))
+         (pane (edwina--respective-window (get-lru-window))))
+    (select-window pane)
+    (delete-other-windows pane)
+    (funcall edwina-layout panes)))
 
 (defun edwina--display-buffer (display-buffer &rest args)
   "Apply DISPLAY-BUFFER to ARGS and arrange windows.
@@ -211,14 +212,14 @@ SIDE is passed to `split-window' to position the stack area."
   "Decrease the size of the master area."
   (interactive)
   (setq edwina-mfact (max (- edwina-mfact 0.05)
-                         0.05))
+                          0.05))
   (edwina-arrange))
 
 (defun edwina-inc-mfact ()
   "Increase the size of the master area."
   (interactive)
   (setq edwina-mfact (min (+ edwina-mfact 0.05)
-                         0.95))
+                          0.95))
   (edwina-arrange))
 
 (defun edwina-dec-nmaster ()
@@ -331,14 +332,14 @@ use meta."
 	  (t "M-"))))
     (dolist (key-and-function edwina-dwm-key-alist)
       (define-key edwina-mode-map
-	(if (cddr key-and-function)
-	    (kbd (format "<%s%s>"
-			 mod-prefix
-			 (car key-and-function)))
-	  (kbd (format "%s%s"
-		       mod-prefix
-		       (car key-and-function))))
-	(cadr key-and-function)))))
+	          (if (cddr key-and-function)
+	              (kbd (format "<%s%s>"
+			           mod-prefix
+			           (car key-and-function)))
+	            (kbd (format "%s%s"
+		                 mod-prefix
+		                 (car key-and-function))))
+	          (cadr key-and-function)))))
 
 (defun edwina--init ()
   "Initialize command `edwina-mode'."
